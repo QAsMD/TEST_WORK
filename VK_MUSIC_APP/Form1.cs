@@ -17,10 +17,10 @@ namespace VK_MUSIC_APP
     public partial class Form1 : Form
     {
         public static string count_audio = "";
+        public static string sURL_GEN = "https://api.vk.com/method/audio.get.xml?owner_id=21881340&need_user=1&v=5.2&access_token=08e6ca4bc5e7b95b15b732d61cedbad6b2e6f6ec98c066759722849c1bd01fa76b961ca82add0295a9115";
         public Form1()
         {
             InitializeComponent();
-            //pictureBox1.LoadAsync("http://cs416919.vk.me/v416919340/40de/7lDHW7H1jkk.jpg");
         }
 
         private void eXITToolStripMenuItem_Click(object sender, EventArgs e)
@@ -32,9 +32,10 @@ namespace VK_MUSIC_APP
         {
             Settings fSettings = new Settings();
             fSettings.ShowDialog();
+            XML_PARSE(GetMethod(sURL_GEN));
         }
 
-        public static string GetMethod(string postUrl)
+        public string GetMethod(string postUrl)
         {
             WebRequest wrGETURL;
             wrGETURL = WebRequest.Create(postUrl);
@@ -45,43 +46,47 @@ namespace VK_MUSIC_APP
             return sLine;
         }
 
-        public static List<Hashtable> XML_PARSE(String XML_DATA)
+        public Hashtable[] XML_PARSE(String XML_DATA)
         {
-            Hashtable dict_audio = new Hashtable();
-            StringBuilder output = new StringBuilder();
-            List<Hashtable> lAudioUser;
-            lAudioUser = new List<Hashtable>();
+            XmlReader reader = XmlReader.Create(new StringReader(XML_DATA));
+            //List<Hashtable> lAudioUser = new List<Hashtable>();
+            int i = 0;
             string sTemp = "";
             // Create an XmlReader
-            using (XmlReader reader = XmlReader.Create(new StringReader(XML_DATA)))
+            reader.ReadToFollowing("count");
+            reader.Read();
+            Hashtable[] dict_audio = new Hashtable[Convert.ToInt32(reader.Value)];
+            label5.Text = Convert.ToString(reader.Value);
+            reader.ReadToFollowing("photo");
+            reader.Read();
+            pictureBox1.LoadAsync(reader.Value);
+            reader.ReadToFollowing("name");
+            reader.Read();
+            label6.Text = reader.Value;
+            while (reader.Read())
             {
-                while (reader.Read())
+                switch (reader.NodeType)
                 {
-                    switch (reader.NodeType)
-                    {
-                        case XmlNodeType.Element:
-                            sTemp = reader.Name;
-                            break;
-                        case XmlNodeType.Text:
-                            if (sTemp == "count")
-                            {
-                                count_audio = reader.Value;
-                            }
-                            else
-                                if (sTemp != "id" && sTemp != "owner_id")
-                                    dict_audio.Add(sTemp, reader.Value);
-                            break;
-                        case XmlNodeType.EndElement:
-                            if (reader.Name == "audio")
-                            {
-                                lAudioUser.Add(dict_audio);
-                                dict_audio.Clear();
-                            }
-                            break;
-                    }
+                    case XmlNodeType.Element:
+                        sTemp = reader.Name;
+                        break;
+                    case XmlNodeType.Text:
+                        if (sTemp != "id" && sTemp != "owner_id")
+                        {
+                            if (dict_audio[i] == null)
+                                dict_audio[i] = new Hashtable();
+                            dict_audio[i].Add(sTemp, reader.Value);
+                        }
+                        break;
+                    case XmlNodeType.EndElement:
+                        if (reader.Name == "audio")
+                        {
+                            i++;
+                        }
+                        break;
                 }
             }
-            return lAudioUser;
+            return dict_audio;
         }
     }
 }
