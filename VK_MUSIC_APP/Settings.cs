@@ -27,7 +27,7 @@ namespace VK_MUSIC_APP
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            folderBrowserDialog1.ShowDialog();
+            folderBrowserLibMusic.ShowDialog();
         }
     }
 }

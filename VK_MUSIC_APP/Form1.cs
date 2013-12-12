@@ -11,12 +11,21 @@ using System.Net;
 using System.IO;
 using System.Xml;
 using System.Collections;
+using System.Media;
+using Media;
 
 namespace VK_MUSIC_APP
 {
     public partial class Form1 : Form
     {
+        public Player pl = new Player();
         public static string sURL_GEN = "https://api.vk.com/method/audio.get.xml?owner_id=21881340&need_user=1&v=5.2&access_token=08e6ca4bc5e7b95b15b732d61cedbad6b2e6f6ec98c066759722849c1bd01fa76b961ca82add0295a9115";
+        public string sSize_Cache = "";
+        public string sVK_ID = "";
+        public string sACCESS_TOKEN = "";
+        public string sFolderLib = "";
+        public Hashtable[] htCollect_Audio;
+        public int move_music_list = 0;
         public Form1()
         {
             InitializeComponent();
@@ -31,9 +40,10 @@ namespace VK_MUSIC_APP
         {
             Settings fSettings = new Settings();
             fSettings.ShowDialog();
-            var htCollect_Audio = XML_PARSE(GetMethod(sURL_GEN));
-
-
+            htCollect_Audio = XML_PARSE(GetMethod(sURL_GEN));
+            string url_music = htCollect_Audio[move_music_list]["url"].ToString();
+            pl.Open(url_music);
+            //pl.Open("http://cs9-3v4.vk.me/p10/cae480265a2bdf.mp3?extra=R_8dam2TdI4iy8Z_uP5K536Crzx5NEuXjU8z7KEI9rMN2SjjV3zPmQ1l5cEiv8X-5MBupAegslGGTw_pCsgWytoT90yhlM0%22");
         }
 
         public string GetMethod(string postUrl)
@@ -58,12 +68,12 @@ namespace VK_MUSIC_APP
             reader.Read();
             Hashtable[] dict_audio = new Hashtable[Convert.ToInt32(reader.Value)];
             lab_CountAudio.Text = Convert.ToString(reader.Value);
-            //reader.ReadToFollowing("photo");
-            //reader.Read();
-            //pictureBox1.LoadAsync(reader.Value);
-            //reader.ReadToFollowing("name");
-            //reader.Read();
-            //lab_NameUser.Text = reader.Value;
+            reader.ReadToFollowing("photo");
+            reader.Read();
+            pictureBox1.LoadAsync(reader.Value);
+            reader.ReadToFollowing("name");
+            reader.Read();
+            lab_NameUser.Text = reader.Value;
             while (reader.Read())
             {
                 switch (reader.NodeType)
@@ -89,6 +99,7 @@ namespace VK_MUSIC_APP
             }
             return dict_audio;
         }
+
         public string api_method(string sMethod_API, string sID_User, string sAccess_Token)
         {
             string sURL_API = "";
@@ -100,6 +111,23 @@ namespace VK_MUSIC_APP
             if (sMethod_API == "audio.get")
                 sURL_API = sURL_API.Replace("%token", sAccess_Token);
             return sURL_API;
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            if ((pl.IsPaused()) == false)
+                pl.Pause();
+            if ((pl.IsPlaying()) == false)
+                pl.Play(false);
+        }
+
+        private void pictureBox4_Click(object sender, EventArgs e)
+        {
+            move_music_list++;
+            pl.Close();
+            pl.Open(htCollect_Audio[move_music_list]["url"].ToString());
+            label3.Text = "Artist: " + htCollect_Audio[move_music_list]["artist"].ToString() + " Song: " + htCollect_Audio[move_music_list]["title"].ToString();
+            pl.Play(false);
         }
     }
 }
